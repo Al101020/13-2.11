@@ -13,7 +13,7 @@ const stream$ = new Observable((observer) => {
   }, 5000);
 
   setTimeout(() => {
-    observer.complete();
+    observer.complete(); // complete()-закрвает, да не всё
   }, 10500);
 
   return () => { // убиваем процес вывода в консоль через 10,5 секунды
