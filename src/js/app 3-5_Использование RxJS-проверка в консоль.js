@@ -1,36 +1,17 @@
-import { // Observable,
-  Subject,
-  fromEvent, from, of,
-  //  range,
-  Observable,
+import {
+  // Observable,
+  fromEvent, from,
+  //  of, range,
 } from 'rxjs';
 import {
   map, pluck, filter,
-  //  startWith,
-  debounceTime, distinctUntilChanged, switchMap, catchError,
+  // startWith,
+  debounceTime, distinctUntilChanged, switchMap,
 } from 'rxjs/operators'; // или
 // import { map, pluck } from 'rxjs/operators'; // или
 
 const email = document.querySelector('.email');
 // const hello = document.querySelector('.hello');
-
-function getRequest(url) {
-  return new Observable((observer) => {
-    const controller = new AbortController();
-
-    fetch(url, {
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        observer.next(data);
-        observer.complete();
-      })
-      .catch((err) => observer.error(err));
-
-    return () => controller.abort();
-  });
-}
 
 const stream$ = fromEvent(email, 'input')
   .pipe(
@@ -41,31 +22,14 @@ const stream$ = fromEvent(email, 'input')
     map((value) => value.trim()),
     filter(Boolean),
     distinctUntilChanged(),
-    switchMap((value) => getRequest(`http://localhost:7070/api/check-email?email=${value}`)
-      .pipe(
-        catchError((err) => {
-          console.log(err);
-
-          return of({ available: false });
-        }),
-      )),
+    switchMap((value) => fetch(`http://localhost:7070/api/check-email?email=${value}`)
+      .then((response) => response.json())),
     map((value) => value.available),
   );
 
-const checkSubject$ = new Subject();
-
-checkSubject$.subscribe((value) => {
+stream$.subscribe((value) => {
   console.log(value);
 });
-
-setTimeout(() => {
-  console.log('2nd subscription');
-  checkSubject$.subscribe((value) => {
-    console.log(value);
-  });
-}, 10000);
-
-stream$.subscribe(checkSubject$);
 
 const fetchStream$ = from(fetch('http://localhost:9001/'));//
 
