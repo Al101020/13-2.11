@@ -3,7 +3,6 @@ import {
   Subject,
   fromEvent, from, of,
   // range, merge, interval, combineLatest,
-  takeUntil,
 } from 'rxjs';
 import {
   map, pluck, filter,
@@ -77,7 +76,7 @@ fetchStream$.subscribe((value) => {
 });
 
 // --------------------------------------------------------------------------------
-console.log('--- операторы объединения потока ---');
+console.log('--- операторы высшего порядка ---');
 console.log('--- 1 оператор merge ---');
 // merge(
 //   interval(1000),
@@ -90,8 +89,7 @@ console.log('--- 2 оператор combineLatest ---');
 //   interval(2000)
 // ).subscribe(console.log)
 // --------------------------------------------------------------------------------
-console.log('--- операторы высшего порядка ---');
-console.log('--- 1 оператор switchMap ---');
+console.log('--- 3 оператор switchMap ---');
 // from([1, 2, 3, 4])
 //   .pipe(
 //     switchMap(value => {
@@ -106,7 +104,7 @@ console.log('--- 1 оператор switchMap ---');
 //     })
 //   ).subscribe(console.log)
 // --------------------------------------------------------------------------------
-console.log('--- 2 оператор mergeMap ---');
+console.log('--- 4 оператор mergeMap ---');
 // from([1, 2, 3, 4])
 //   .pipe(
 //     mergeMap(value => {
@@ -121,7 +119,7 @@ console.log('--- 2 оператор mergeMap ---');
 //     })
 //   ).subscribe(console.log)
 // --------------------------------------------------------------------------------
-console.log('--- 3 оператор cancatMap, не получилось ---');
+console.log('--- 5 оператор cancatMap, не получилось ---');
 // from([1, 2, 3, 4])
 //   .pipe(
 //     cancatMap(value => {
@@ -136,7 +134,7 @@ console.log('--- 3 оператор cancatMap, не получилось ---');
 //     })
 //   ).subscribe(console.log)
 // --------------------------------------------------------------------------------
-console.log('--- 4 оператор cancatMap, не получилось ---');
+console.log('--- 6 оператор cancatMap, не получилось ---');
 from([1, 2, 3, 4])
   .pipe(
     exhaustMap((value) => getRequest(`http://localhost:7070/api/check-email?email=${value}`)
@@ -194,33 +192,3 @@ from([1, 2, 3, 4])
 //   next: (value) => { console.log(value); },
 //   complete: () => { console.log('Complete!'); },
 // });
-
-// -----------------------------------------------------------------------
-const draggable = (el) => {
-  const startDrag$ = fromEvent(el, 'mousedown');
-  const moveDrag$ = fromEvent(document, 'mousemove');
-  const endDrag$ = fromEvent(el, 'mouseup');
-
-  return startDrag$.pipe(
-    switchMap((event) => {
-      event.stopPropagation(); // для отмены всплытия на событии
-      const diffX = el.offsetLeft - event.clientX;
-      const diffY = el.offsetTop - event.clientY;
-      return moveDrag$.pipe(
-        map((event_) => {
-          const { clientX, clientY } = event_;
-          return {
-            x: clientX + diffX,
-            y: clientY + diffY,
-          };
-        }),
-        takeUntil(endDrag$),
-      );
-    }),
-  );
-};
-
-draggable(email).subscribe((coord) => {
-  email.style.top = `${coord.y}px`;
-  email.style.left = `${coord.x}px`;
-});

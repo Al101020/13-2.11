@@ -260,11 +260,11 @@ const router = new Router();
 router.get('/api/check-email', async (ctx, next) => {
   const { email } = ctx.request.query;
   
-  if (Math.random() > 0.5) {
-    ctx.response.status = 500;
+  // if (Math.random() > 0.5) {
+  //   ctx.response.status = 500;
 
-    return;
-  }
+  //   return;
+  // }
 
   ctx.response.body = {
     available: email.includes('@') && !email.startsWith('admin')
