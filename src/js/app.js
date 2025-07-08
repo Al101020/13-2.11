@@ -10,6 +10,8 @@ import {
   //  startWith,
   debounceTime, distinctUntilChanged, catchError,
   switchMap, exhaustMap,
+  startWith,
+  scan, share,
   // mergeMap, cancatMap,
 } from 'rxjs/operators'; // или
 // import { map, pluck } from 'rxjs/operators'; // или
@@ -195,7 +197,7 @@ from([1, 2, 3, 4])
 //   complete: () => { console.log('Complete!'); },
 // });
 
-// -----------------------------------------------------------------------
+// ------------------- 5 video ----------------------------------------------------
 const draggable = (el) => {
   const startDrag$ = fromEvent(el, 'mousedown');
   const moveDrag$ = fromEvent(document, 'mousemove');
@@ -224,3 +226,98 @@ draggable(email).subscribe((coord) => {
   email.style.top = `${coord.y}px`;
   email.style.left = `${coord.x}px`;
 });
+
+const ACTIONS = {
+  Increment: 'INCREMENT',
+  Decrement: 'DECREMENT',
+  Reset: 'RESET',
+};
+
+/**
+ * {
+ * type: ACTIONS.Increment,
+ * payload: 5
+ * }
+ */
+// console.log(ACTIONS);
+
+function reduce(state, action) {
+  switch (action.type) {
+    case ACTIONS.Reset:
+      return { ...state, counter: 0 };
+    case ACTIONS.Increment:
+      return {
+        ...state,
+        counter: state.counter + (action.payload || 1),
+      };
+    case ACTIONS.Decrement:
+      return {
+        ...state,
+        counter: state.counter - (action.payload || 1),
+      };
+    default:
+      return state;
+  }
+}
+
+// ---
+const source$ = of(1, 2, 3, 4, 5);
+const result$ = source$.pipe(scan((acc, curr) => acc + curr, 0));
+console.log(result$);
+// ---
+
+class Store {
+  constructor() {
+    this.actions$ = new Subject();
+    this.state$ = this.actions$.asObservable().pipe(
+      startWith({ type: ' INITIALIZATION ' }),
+      scan((state, action) => reduce(state, action), { counter: 0 }),
+      share(),
+    );
+  }
+
+  dispatch(type, payload = null) {
+    this.actions$.next({ type, payload });
+  }
+
+  inc(value = null) {
+    this.dispatch(ACTIONS.Increment, value);
+  }
+
+  dec(value = null) {
+    this.dispatch(ACTIONS.Decrement, value);
+  }
+
+  reset() {
+    this.dispatch(ACTIONS.Reset);
+  }
+}
+// console.log(Store);
+// const sSS = new Store();
+// console.log(sSS);
+
+const store = new Store();
+console.log(store);
+
+const incButton = document.querySelector('.increment');
+const decButton = document.querySelector('.decrement');
+// const decButton = document.querySelector('.decrement');
+
+incButton.addEventListener('click', () => {
+  store.inc();
+});
+
+decButton.addEventListener('click', () => {
+  store.dec();
+});
+
+store.state$
+  .pipe(
+    pluck('counter'),
+    distinctUntilChanged(),
+  // ).subscribe(console.log)
+  ).subscribe((value) => {
+    const counter = document.querySelector('.counter');
+
+    counter.textContent = value;
+  });
